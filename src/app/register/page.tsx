@@ -1,7 +1,36 @@
+"use client";
+
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { ArrowRight, UserPlus } from "lucide-react";
+import { useState } from "react";
+import { useAuth } from "@/context/auth-context";
 
 export default function RegisterPage() {
+  const router = useRouter();
+  const { login } = useAuth();
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    setError("");
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"}/auth/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      setError(payload.message || "Registration failed");
+      return;
+    }
+    login({ id: payload.user.id, email: payload.user.email, name: payload.user.name }, payload.access_token, payload.refresh_token);
+    router.push("/dashboard");
+  }
+
   return (
     <div className="flex min-h-[70vh] items-center justify-center px-6 py-20 sm:px-8 lg:px-8">
       <div className="w-full max-w-md rounded-[2rem] border border-white/10 bg-white/5 p-8 shadow-[0_30px_120px_rgba(6,182,212,0.18)] backdrop-blur-xl">
@@ -14,16 +43,18 @@ export default function RegisterPage() {
             <h1 className="text-2xl font-semibold text-white">Create your workspace</h1>
           </div>
         </div>
-        <div className="mt-8 space-y-3">
-          <button className="w-full rounded-full border border-white/10 bg-slate-900/80 px-4 py-3 text-sm font-semibold text-white transition hover:border-cyan-400/30">Sign up with Google</button>
-          <button className="w-full rounded-full border border-white/10 bg-slate-900/80 px-4 py-3 text-sm font-semibold text-white transition hover:border-cyan-400/30">Sign up with GitHub</button>
-        </div>
+        <form onSubmit={handleSubmit} className="mt-8 space-y-4">
+          <input value={name} onChange={(event) => setName(event.target.value)} className="w-full rounded-full border border-white/10 bg-slate-900/80 px-4 py-3 text-sm text-white" placeholder="Full name" required />
+          <input value={email} onChange={(event) => setEmail(event.target.value)} className="w-full rounded-full border border-white/10 bg-slate-900/80 px-4 py-3 text-sm text-white" placeholder="Email" type="email" required />
+          <input value={password} onChange={(event) => setPassword(event.target.value)} className="w-full rounded-full border border-white/10 bg-slate-900/80 px-4 py-3 text-sm text-white" placeholder="Password" type="password" required />
+          {error ? <p className="text-sm text-rose-300">{error}</p> : null}
+          <button type="submit" className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300">
+            Create account <ArrowRight className="h-4 w-4" />
+          </button>
+        </form>
         <p className="mt-8 text-sm text-slate-400">
           Already have an account? <Link href="/login" className="font-semibold text-cyan-300">Log in</Link>
         </p>
-        <Link href="/dashboard" className="mt-8 inline-flex items-center gap-2 rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300">
-          Create account <ArrowRight className="h-4 w-4" />
-        </Link>
       </div>
     </div>
   );

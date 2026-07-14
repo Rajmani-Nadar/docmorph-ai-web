@@ -1,18 +1,48 @@
-import { FileSpreadsheet, Download, History, Sparkles } from "lucide-react";
+"use client";
 
-const cards = [
-  { title: "Total PDFs", value: "128", icon: <FileSpreadsheet className="h-6 w-6" /> },
-  { title: "Students Extracted", value: "8,402", icon: <Sparkles className="h-6 w-6" /> },
-  { title: "Downloads", value: "96", icon: <Download className="h-6 w-6" /> },
-];
-
-const recentUploads = [
-  { name: "Attendance Register A", date: "2 hours ago", status: "Ready" },
-  { name: "Admission Batch 04", date: "Today", status: "Reviewing" },
-  { name: "Student Records", date: "Yesterday", status: "Exported" },
-];
+import { FileSpreadsheet, History, Sparkles, TrendingUp, HardDrive } from "lucide-react";
+import { useDashboardStats } from "@/hooks/use-data";
+import { useSubscription, useUsage, useBilling } from "@/hooks/use-subscription";
 
 export default function DashboardPage() {
+  const { stats, isLoading, error } = useDashboardStats();
+  const { subscription, isLoading: subscriptionLoading } = useSubscription();
+  const { usage, isLoading: usageLoading } = useUsage();
+  const { billing, isLoading: billingLoading } = useBilling();
+
+  const cards = [
+    {
+      label: "Current Plan",
+      value: subscription?.currentPlan ?? "FREE",
+      icon: Sparkles,
+    },
+    {
+      label: "Uploads Used",
+      value: usage?.uploadsUsed ?? 0,
+      icon: FileSpreadsheet,
+    },
+    {
+      label: "Pages Used",
+      value: usage?.pagesUsed ?? 0,
+      icon: TrendingUp,
+    },
+    {
+      label: "Downloads",
+      value: usage?.downloads ?? 0,
+      icon: History,
+    },
+    {
+      label: "Storage Used",
+      value: usage ? `${usage.storageUsedMb.toFixed(1)} MB` : "0 MB",
+      icon: HardDrive,
+    },
+    {
+      label: "Remaining Uploads",
+      value: usage?.remainingUploads ?? "∞",
+      icon: FileSpreadsheet,
+    },
+  ];
+
   return (
     <div className="px-6 py-20 sm:px-8 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -24,42 +54,57 @@ export default function DashboardPage() {
           <div className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-sm text-cyan-200">Live workspace</div>
         </div>
 
-        <div className="mt-8 grid gap-6 md:grid-cols-3">
-          {cards.map((card) => (
-            <div key={card.title} className="rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
-              <div className="flex items-center justify-between">
-                <p className="text-sm text-slate-400">{card.title}</p>
-                <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/10 p-2 text-cyan-300">{card.icon}</div>
+        <div className="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {cards.map((card) => {
+            const Icon = card.icon;
+            return (
+              <div key={card.label} className="rounded-4xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-slate-400">{card.label}</p>
+                  <div className="rounded-2xl border border-cyan-400/20 bg-cyan-400/10 p-2 text-cyan-300"><Icon className="h-6 w-6" /></div>
+                </div>
+                <p className="mt-6 text-3xl font-semibold text-white">{card.value}</p>
               </div>
-              <p className="mt-6 text-3xl font-semibold text-white">{card.value}</p>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        <div className="mt-8 grid gap-8 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="rounded-[2rem] border border-white/10 bg-slate-900/70 p-8 backdrop-blur-xl">
-            <div className="flex items-center gap-3">
-              <History className="h-5 w-5 text-cyan-300" />
-              <h2 className="text-xl font-semibold text-white">Recent uploads</h2>
+        <div className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
+          <div className="rounded-4xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold text-white">Recent Billing Activity</h2>
+              <span className="text-sm text-slate-400">{billingLoading ? "Loading..." : `${billing.length} events`}</span>
             </div>
-            <div className="mt-6 space-y-4">
-              {recentUploads.map((upload) => (
-                <div key={upload.name} className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
+            <div className="mt-6 space-y-3">
+              {billing.slice(0, 5).map((event) => (
+                <div key={event.id} className="flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-slate-300">
                   <div>
-                    <p className="font-medium text-white">{upload.name}</p>
-                    <p className="text-sm text-slate-400">{upload.date}</p>
+                    <p className="font-medium text-white">{event.eventType}</p>
+                    <p className="text-slate-400">{event.occurredAt ? new Date(event.occurredAt).toLocaleDateString() : "Pending"}</p>
                   </div>
-                  <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-sm text-cyan-200">{upload.status}</span>
+                  <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-cyan-200">{event.status}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
-            <h2 className="text-xl font-semibold text-white">Why teams use this flow</h2>
-            <p className="mt-4 text-sm leading-7 text-slate-400">A calm, structured workflow reduces manual errors and helps campus staff get to clean spreadsheets faster.</p>
-            <div className="mt-8 rounded-2xl border border-white/10 bg-slate-950/70 p-6 text-sm leading-7 text-slate-300">
-              “Upload once, review easily, export in Excel or CSV for administration needs.”
+          <div className="rounded-4xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
+            <h2 className="text-xl font-semibold text-white">Monthly Usage</h2>
+            <div className="mt-6 space-y-4">
+              {usage ? (
+                <>
+                  <div>
+                    <div className="mb-2 flex items-center justify-between text-sm text-slate-400"><span>Uploads</span><span>{usage.monthlyUsage.uploads}</span></div>
+                    <div className="h-2 rounded-full bg-slate-800"><div className="h-2 rounded-full bg-cyan-400" style={{ width: `${Math.min(100, (usage.monthlyUsage.uploads / Math.max(usage.planLimit.maxUploadsPerMonth ?? 1, 1)) * 100)}%` }} /></div>
+                  </div>
+                  <div>
+                    <div className="mb-2 flex items-center justify-between text-sm text-slate-400"><span>Pages</span><span>{usage.monthlyUsage.pages}</span></div>
+                    <div className="h-2 rounded-full bg-slate-800"><div className="h-2 rounded-full bg-emerald-400" style={{ width: `${Math.min(100, (usage.monthlyUsage.pages / Math.max(usage.planLimit.maxPagesPerMonth ?? 1, 1)) * 100)}%` }} /></div>
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-slate-400">Usage metrics will appear here once the backend is queried.</p>
+              )}
             </div>
           </div>
         </div>
