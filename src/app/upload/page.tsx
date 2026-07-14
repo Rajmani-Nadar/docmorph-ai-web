@@ -13,7 +13,7 @@ import { ErrorAlert } from "@/components/error-alert";
 import { SubscriptionUpgradeModal } from "@/components/subscription-upgrade-modal";
 
 export default function UploadPage() {
-  const { file, status, currentStep, progress, extractedData, error, selectFile, removeFile, handleUpload, handleDownload, handleCancel, reset } = useUpload();
+  const { file, status, currentStep, progress, extractedData, error, message, currentPage, totalPages, selectFile, removeFile, handleUpload, handleDownload, handleCancel, reset } = useUpload();
   const { isOnline, isLoading: isHealthLoading, error: healthError, checkHealth } = useHealthCheck();
   const { usage, isLoading: usageLoading } = useUsage();
   const { subscription } = useSubscription();
@@ -202,7 +202,7 @@ export default function UploadPage() {
                   Cancel
                 </button>
               </div>
-              <ProcessingStatus currentStep={currentStep} progress={progress} />
+              <ProcessingStatus currentStep={currentStep} progress={progress} message={message} error={error} currentPage={currentPage} totalPages={totalPages} />
             </div>
           ) : null}
 

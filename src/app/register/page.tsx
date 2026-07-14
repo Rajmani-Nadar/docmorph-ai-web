@@ -27,7 +27,23 @@ export default function RegisterPage() {
       setError(payload.message || "Registration failed");
       return;
     }
-    login({ id: payload.user.id, email: payload.user.email, name: payload.user.name }, payload.access_token, payload.refresh_token);
+
+    const userPayload = payload.user ?? payload;
+    const user = {
+      id: userPayload.id ?? userPayload.user_id ?? userPayload._id ?? "",
+      email: userPayload.email ?? email,
+      name: userPayload.name ?? userPayload.full_name ?? name,
+    };
+
+    const accessToken = payload.access_token ?? payload.accessToken ?? "";
+    const refreshToken = payload.refresh_token ?? payload.refreshToken ?? "";
+
+    if (!accessToken || !refreshToken) {
+      setError(payload.message || "Registration succeeded but no session was returned.");
+      return;
+    }
+
+    login(user, accessToken, refreshToken);
     router.push("/dashboard");
   }
 

@@ -7,12 +7,6 @@ import { useState } from "react";
 import { useAuth } from "@/context/auth-context";
 import { useSubscription } from "@/hooks/use-subscription";
 
-const links = [
-  { href: "/features", label: "Features" },
-  { href: "/pricing", label: "Pricing" },
-  { href: "/contact", label: "Contact" },
-];
-
 const quickLinks = [
   { href: "/dashboard", label: "Dashboard" },
   { href: "/history", label: "History" },
@@ -24,6 +18,12 @@ export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const { isAuthenticated, user, logout } = useAuth();
   const { subscription } = useSubscription();
+  const pricingHref = isAuthenticated ? "/subscription" : "/pricing";
+  const links = [
+    { href: "/features", label: "Features" },
+    { href: pricingHref, label: "Pricing" },
+    { href: "/contact", label: "Contact" },
+  ];
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/10 bg-slate-950/80 backdrop-blur-xl">

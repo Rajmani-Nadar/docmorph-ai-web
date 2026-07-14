@@ -1,14 +1,39 @@
 "use client";
 
 import { FileSpreadsheet, History, Sparkles, TrendingUp, HardDrive } from "lucide-react";
-import { useDashboardStats } from "@/hooks/use-data";
 import { useSubscription, useUsage, useBilling } from "@/hooks/use-subscription";
 
 export default function DashboardPage() {
-  const { stats, isLoading, error } = useDashboardStats();
-  const { subscription, isLoading: subscriptionLoading } = useSubscription();
-  const { usage, isLoading: usageLoading } = useUsage();
+  const { subscription } = useSubscription();
+  const { usage } = useUsage();
+
   const { billing, isLoading: billingLoading } = useBilling();
+
+  const eventTitles: Record<string, string> = {
+    payment_captured: "💳 Payment Captured",
+    subscription_activated: "⭐ Subscription Activated",
+  };
+
+  const statusStyles: Record<
+    string,
+    { label: string; className: string }
+  > = {
+    completed: {
+      label: "Completed",
+      className:
+        "border-emerald-400/20 bg-emerald-400/10 text-emerald-200",
+    },
+    pending: {
+      label: "Pending",
+      className:
+        "border-amber-400/20 bg-amber-400/10 text-amber-200",
+    },
+    failed: {
+      label: "Failed",
+      className:
+        "border-rose-400/20 bg-rose-400/10 text-rose-200",
+    },
+  };
 
   const cards = [
     {
@@ -76,15 +101,47 @@ export default function DashboardPage() {
               <span className="text-sm text-slate-400">{billingLoading ? "Loading..." : `${billing.length} events`}</span>
             </div>
             <div className="mt-6 space-y-3">
-              {billing.slice(0, 5).map((event) => (
-                <div key={event.id} className="flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-slate-300">
-                  <div>
-                    <p className="font-medium text-white">{event.eventType}</p>
-                    <p className="text-slate-400">{event.occurredAt ? new Date(event.occurredAt).toLocaleDateString() : "Pending"}</p>
-                  </div>
-                  <span className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-cyan-200">{event.status}</span>
-                </div>
-              ))}
+              {
+                billing.length === 0 ? (
+                  <p className="text-sm text-slate-400">
+                    No billing activity yet.
+                  </p>
+                ) : (
+                  billing.slice(0, 5).map((event) => {
+                    const status =
+                      statusStyles[event.status] ?? {
+                        label: event.status,
+                        className:
+                          "border-cyan-400/20 bg-cyan-400/10 text-cyan-200",
+                      };
+
+                    return (
+                      <div
+                        key={event.id}
+                        className="flex items-center justify-between rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3"
+                      >
+                        <div>
+                          <p className="font-medium text-white">
+                            {eventTitles[event.eventType] ?? event.eventType}
+                          </p>
+
+                          <p className="text-sm text-slate-400">
+                            {event.occurredAt
+                              ? new Date(event.occurredAt).toLocaleString()
+                              : "-"}
+                          </p>
+                        </div>
+
+                        <span
+                          className={`rounded-full border px-3 py-1 text-xs font-medium ${status.className}`}
+                        >
+                          {status.label}
+                        </span>
+                      </div>
+                    );
+                  })
+                )
+              }
             </div>
           </div>
 

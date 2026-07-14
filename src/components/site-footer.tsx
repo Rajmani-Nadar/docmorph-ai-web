@@ -1,7 +1,16 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { ArrowRight, FileSpreadsheet } from "lucide-react";
+import { useAuth } from "@/context/auth-context";
 
 export function SiteFooter() {
+  const pathname = usePathname();
+  const { isAuthenticated } = useAuth();
+  const pricingHref = isAuthenticated ? "/subscription" : "/pricing";
+  const isPricingActive = pathname === pricingHref;
+
   return (
     <footer className="border-t border-white/10 bg-slate-950/90">
       <div className="mx-auto flex max-w-7xl flex-col gap-8 px-6 py-10 lg:flex-row lg:items-center lg:justify-between lg:px-8">
@@ -19,7 +28,7 @@ export function SiteFooter() {
 
         <div className="flex flex-wrap gap-4 text-sm text-slate-400">
           <Link href="/features" className="transition hover:text-white">Features</Link>
-          <Link href="/pricing" className="transition hover:text-white">Pricing</Link>
+          <Link href={pricingHref} className={`transition hover:text-white ${isPricingActive ? "text-white" : ""}`}>Pricing</Link>
           <Link href="/contact" className="transition hover:text-white">Contact</Link>
         </div>
 

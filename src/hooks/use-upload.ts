@@ -12,6 +12,9 @@ const initialState: UploadState = {
   progress: 0,
   extractedData: [],
   error: null,
+  message: null,
+  currentPage: null,
+  totalPages: null,
 };
 
 function normalizeExtractedData(payload: unknown): ExtractedRow[] {
@@ -55,21 +58,13 @@ function normalizeProcessingStep(rawStep: string | null | undefined): Processing
 
   const value = rawStep.trim().toLowerCase();
   const mapping: Record<string, ProcessingStep> = {
-    upload: "upload_complete",
-    uploaded: "upload_complete",
-    "upload complete": "upload_complete",
-    processing: "converting_pdf",
-    converting: "converting_pdf",
-    "converting pdf": "converting_pdf",
-    reading: "reading_page",
-    "reading page": "reading_page",
-    recognition: "ai_recognition",
-    "ai recognition": "ai_recognition",
-    structuring: "structuring_data",
-    "structuring data": "structuring_data",
-    generating: "generating_excel",
-    excel: "generating_excel",
-    "generating excel": "generating_excel",
+    upload_complete: "upload_complete",
+    converting_pdf: "converting_pdf",
+    reading_page: "reading_page",
+    ai_recognition: "ai_recognition",
+    structuring_data: "structuring_data",
+    generating_excel: "generating_excel",
+    saving_results: "ready",
     ready: "ready",
     completed: "ready",
   };
@@ -106,6 +101,9 @@ export function useUpload() {
       ...prev,
       file,
       error: null,
+      message: null,
+      currentPage: null,
+      totalPages: null,
       status: "idle",
       jobId: null,
       currentStep: null,
@@ -119,6 +117,9 @@ export function useUpload() {
       ...prev,
       file: null,
       error: null,
+      message: null,
+      currentPage: null,
+      totalPages: null,
       status: "idle",
       jobId: null,
       currentStep: null,
@@ -134,6 +135,9 @@ export function useUpload() {
       ...prev,
       status: "uploading",
       error: null,
+      message: null,
+      currentPage: null,
+      totalPages: null,
       jobId: null,
       currentStep: null,
       progress: 0,
@@ -169,13 +173,17 @@ export function useUpload() {
       try {
         const status: JobStatusResponse = await getJobStatus(state.jobId!);
         const nextStatus = status.status || "processing";
+        const nextStep = normalizeProcessingStep(status.stage ?? status.currentStep ?? null);
 
         setState((prev) => ({
           ...prev,
           status: nextStatus,
-          currentStep: normalizeProcessingStep(status.currentStep ?? null),
+          currentStep: nextStep,
           progress: Math.max(0, Math.min(100, Math.round(status.progress || 0))),
           error: status.error || null,
+          message: status.message || null,
+          currentPage: typeof status.currentPage === "number" ? status.currentPage : prev.currentPage,
+          totalPages: typeof status.totalPages === "number" ? status.totalPages : prev.totalPages,
         }));
 
         if (nextStatus === "completed") {
@@ -186,6 +194,7 @@ export function useUpload() {
             currentStep: "ready",
             progress: 100,
             error: null,
+            message: result && typeof result === "object" ? (result as { message?: string }).message ?? "Extraction completed successfully" : "Extraction completed successfully",
           }));
           setIsPolling(false);
           window.clearInterval(pollInterval);
@@ -193,7 +202,8 @@ export function useUpload() {
           setState((prev) => ({
             ...prev,
             error: prev.error || status.error || "Processing failed",
-            currentStep: null,
+            currentStep: nextStep ?? prev.currentStep ?? null,
+            message: status.message || prev.message || status.error || "Processing failed",
           }));
           setIsPolling(false);
           window.clearInterval(pollInterval);
@@ -268,6 +278,9 @@ export function useUpload() {
     progress: state.progress,
     extractedData: state.extractedData,
     error: state.error,
+    message: state.message,
+    currentPage: state.currentPage,
+    totalPages: state.totalPages,
     isProcessing: state.status === "processing" || state.status === "uploading" || state.status === "pending",
     selectFile,
     removeFile,

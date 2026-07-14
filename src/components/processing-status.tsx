@@ -37,11 +37,14 @@ const STEP_ORDER: ProcessingStep[] = [
 type ProcessingStatusProps = {
   currentStep: ProcessingStep | null;
   progress: number;
-  totalPages?: number;
-  currentPage?: number;
+  totalPages?: number | null;
+  currentPage?: number | null;
+  message?: string | null;
+  error?: string | null;
 };
 
-export function ProcessingStatus({ currentStep, progress, totalPages, currentPage }: ProcessingStatusProps) {
+export function ProcessingStatus({ currentStep, progress, totalPages, currentPage, message, error }: ProcessingStatusProps) {
+  const statusMessage = message || (error ? error : currentStep ? STEP_DESCRIPTIONS[currentStep] : "Processing...");
   return (
     <div className="rounded-[1.5rem] border border-white/10 bg-slate-950/70 p-8 shadow-[0_20px_80px_rgba(6,182,212,0.12)]">
       <div className="mb-8">
@@ -51,9 +54,10 @@ export function ProcessingStatus({ currentStep, progress, totalPages, currentPag
               {currentStep ? STEP_LABELS[currentStep] : "Processing..."}
             </h3>
             <p className="mt-2 text-sm text-slate-400">
-              {currentStep ? STEP_DESCRIPTIONS[currentStep] : ""}
-              {currentStep === "reading_page" && totalPages && currentPage ? ` (${currentPage}/${totalPages})` : ""}
+              {statusMessage}
+              {currentStep === "reading_page" && typeof totalPages === "number" && typeof currentPage === "number" ? ` (${currentPage}/${totalPages})` : ""}
             </p>
+            {error && !message ? <p className="mt-2 text-xs text-rose-300">{error}</p> : null}
           </div>
           <div className="text-right">
             <p className="text-3xl font-bold text-cyan-300">{progress}%</p>

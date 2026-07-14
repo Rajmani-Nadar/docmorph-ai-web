@@ -21,10 +21,14 @@ export type UploadResponse = {
 export type JobStatusResponse = {
   status: JobStatus;
   progress: number;
+  stage?: string | null;
   currentStep?: string | null;
   currentPage?: number;
   totalPages?: number;
+  completedPages?: number;
+  failedPages?: number;
   estimatedRemaining?: string | null;
+  message?: string | null;
   error?: string | null;
 };
 
@@ -53,6 +57,9 @@ export type UploadState = {
   progress: number;
   extractedData: ExtractedRow[];
   error: string | null;
+  message: string | null;
+  currentPage: number | null;
+  totalPages: number | null;
 };
 
 // History Types
@@ -151,4 +158,51 @@ export type BillingEvent = {
   referenceId: string | null;
   occurredAt: string | null;
   details: Record<string, unknown>;
+};
+
+export type PaymentOrderResponse = {
+  orderId?: string;
+  order_id?: string;
+  amount?: number | string;
+  currency?: string;
+  keyId?: string;
+  key_id?: string;
+  id?: string;
+  message?: string;
+};
+
+export type PaymentVerificationResponse = {
+  success?: boolean;
+  verified?: boolean;
+  status?: string;
+  message?: string;
+};
+
+export type PaymentHistoryEntry = {
+  id?: number | string;
+  eventType?: string;
+  amount?: number | string;
+  currency?: string;
+  status?: string;
+  referenceId?: string | null;
+  occurredAt?: string | null;
+  plan?: string;
+  planCode?: string;
+  currentPlan?: string;
+  details?: Record<string, unknown>;
+};
+
+export type InvoiceDetails = {
+  id?: string | number;
+  invoiceId?: string | number;
+  invoiceNumber?: string;
+  status?: string;
+  amount?: number | string;
+  currency?: string;
+  createdAt?: string;
+  issuedAt?: string;
+  paidAt?: string;
+  plan?: string;
+  planCode?: string;
+  [key: string]: unknown;
 };

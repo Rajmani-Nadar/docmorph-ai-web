@@ -5,6 +5,13 @@ import { getPlans, getSubscription, getUsage, getBillingHistory, changeSubscript
 import type { BillingEvent, Plan, SubscriptionState, UsageSummary } from "@/types";
 
 const CACHE_TTL_MS = 30_000;
+const SUBSCRIPTION_REFRESH_EVENT = "docmorph:subscription-updated";
+
+export function refreshSubscriptionState() {
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event(SUBSCRIPTION_REFRESH_EVENT));
+  }
+}
 
 export function useSubscription() {
   const [subscription, setSubscription] = useState<SubscriptionState | null>(null);
@@ -36,6 +43,17 @@ export function useSubscription() {
 
   useEffect(() => {
     void fetchSubscription();
+  }, [fetchSubscription]);
+
+  useEffect(() => {
+    const handleRefresh = () => {
+      void fetchSubscription(true);
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener(SUBSCRIPTION_REFRESH_EVENT, handleRefresh);
+      return () => window.removeEventListener(SUBSCRIPTION_REFRESH_EVENT, handleRefresh);
+    }
   }, [fetchSubscription]);
 
   const changePlan = useCallback(async (planCode: string) => {
@@ -90,6 +108,17 @@ export function useUsage() {
     void fetchUsage();
   }, [fetchUsage]);
 
+  useEffect(() => {
+    const handleRefresh = () => {
+      void fetchUsage(true);
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener(SUBSCRIPTION_REFRESH_EVENT, handleRefresh);
+      return () => window.removeEventListener(SUBSCRIPTION_REFRESH_EVENT, handleRefresh);
+    }
+  }, [fetchUsage]);
+
   return useMemo(() => ({ usage, isLoading, error, refetch: fetchUsage }), [usage, isLoading, error, fetchUsage]);
 }
 
@@ -121,6 +150,17 @@ export function useBilling() {
 
   useEffect(() => {
     void fetchBilling();
+  }, [fetchBilling]);
+
+  useEffect(() => {
+    const handleRefresh = () => {
+      void fetchBilling(true);
+    };
+
+    if (typeof window !== "undefined") {
+      window.addEventListener(SUBSCRIPTION_REFRESH_EVENT, handleRefresh);
+      return () => window.removeEventListener(SUBSCRIPTION_REFRESH_EVENT, handleRefresh);
+    }
   }, [fetchBilling]);
 
   return useMemo(() => ({ billing, isLoading, error, refetch: fetchBilling }), [billing, isLoading, error, fetchBilling]);

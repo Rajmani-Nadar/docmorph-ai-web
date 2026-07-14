@@ -1,4 +1,4 @@
-import { BillingEvent, DashboardStats, DownloadResponse, HistoryEntry, JobStatusResponse, Plan, SubscriptionState, UploadResponse, UsageSummary } from "@/types";
+import { BillingEvent, DashboardStats, DownloadResponse, HistoryEntry, InvoiceDetails, JobStatusResponse, PaymentHistoryEntry, PaymentOrderResponse, PaymentVerificationResponse, Plan, SubscriptionState, UploadResponse, UsageSummary } from "@/types";
 
 const DEFAULT_API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const LOGOUT_EVENT = "docmorph.logout";
@@ -297,6 +297,31 @@ export async function getUsage(): Promise<UsageSummary> {
 
 export async function getBillingHistory(): Promise<{ events: BillingEvent[] }> {
   return makeRequest<{ events: BillingEvent[] }>("/billing/history", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+}
+
+export async function createPaymentOrder(planCode: string): Promise<PaymentOrderResponse> {
+  return makeRequest<PaymentOrderResponse>("/payments/create-order", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ planCode }),
+  });
+}
+
+export async function verifyPayment(payload: Record<string, unknown>): Promise<PaymentVerificationResponse> {
+  return makeRequest<PaymentVerificationResponse>("/payments/verify", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getPaymentInvoice(invoiceId: string): Promise<InvoiceDetails> {
+  return makeRequest<InvoiceDetails>(`/payments/invoice/${invoiceId}`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
   });
